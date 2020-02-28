@@ -56,10 +56,11 @@ app.use('/api/me', ensureAuth);
 // *** TODOS ***
 app.get('/api/quotes', async (req, res) => {
     try {
+        // Take in ?search= query
         const query = req.query.search;
         console.log('query is', query);
 
-        // get the data from the third party API
+        // Get the data from the third party API
         const result = await request.get(`${process.env.TIINGO_SEARCH_URL}?query=${query}&token=${process.env.TIINGO_KEY}`);
 
         res.json(result.body);
@@ -110,14 +111,13 @@ app.post('/api/me/favorites', async (req, res) => {
     }
 });
 
-app.post('/api/todos', async (req, res) => {
-    const todo = req.body;
-
+app.delete('/api/me/favorites/:id', async (req, res) => {
     try {
         const result = await client.query(`
-            
-        `,
-            [/* pass in data */]);
+            DELETE FROM favorites
+            WHERE id = $1 AND user_id = $2
+            RETURNING *;
+        `, [req.params.id, req.userId]);
 
         res.json(result.rows[0]);
     }
@@ -129,42 +129,6 @@ app.post('/api/todos', async (req, res) => {
     }
 });
 
-app.put('/api/todos/:id', async (req, res) => {
-    const id = req.params.id;
-    const todo = req.body;
-
-    try {
-        const result = await client.query(`
-            
-        `, [/* pass in data */]);
-
-        res.json(result.rows[0]);
-    }
-    catch (err) {
-        console.log(err);
-        res.status(500).json({
-            error: err.message || err
-        });
-    }
-});
-
-app.delete('/api/todos/:id', async (req, res) => {
-    // get the id that was passed in the route:
-
-    try {
-        const result = await client.query(`
-
-        `, [/* pass data */]);
-
-        res.json(result.rows[0]);
-    }
-    catch (err) {
-        console.log(err);
-        res.status(500).json({
-            error: err.message || err
-        });
-    }
-});
 
 // Start the server
 app.listen(PORT, () => {
